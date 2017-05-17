@@ -1,14 +1,27 @@
 package connectfour;
 
+import static org.fusesource.jansi.Ansi.*;
+import static org.fusesource.jansi.Ansi.Color.*;
+import org.fusesource.jansi.AnsiConsole;
+
 /**
  * This class allows the playing of a virtual game of "Connect Four"
+ * Note that this version uses the jansi library and requires "jansi.dll" to be
+ * found in an appropriate environment path.
  * @author Stephen WhitelyP308730
+ * @version 2
  */
 public class ConnectFour {
     private int[][] board;
     private int turn;
     private int width = 7, height = 6;
     private boolean gameOver;
+    // colours
+    private static Color boardColour = YELLOW;
+    private static Color numberColour = GREEN;
+    private static Color playerOneColour = RED;
+    private static Color playerTwoColour = CYAN;
+    private static Color defaultColour = WHITE;
     /**
      * Constructor to create a new instance of a game.<br>
      * This default constructor will randomly select the first player.
@@ -67,22 +80,26 @@ public class ConnectFour {
      * Display the board by printing it out to the console.
      */
     public void displayBoard() {
-        System.out.println("  1 2 3 4 5 6 7");
-        System.out.println("_________________");
+        AnsiConsole.systemInstall();
+        System.out.println(ansi().fg(numberColour) + "  1 2 3 4 5 6 7");
+        System.out.println(ansi().fg(boardColour) + "_________________");
         for (int i = height-1; i >= 0; i--) {
-            System.out.print("| ");
+            System.out.print("||");
             for (int j = 0; j < width; j++) {
                 if (board[j][i] == 0) {
-                    System.out.print("X ");
+                    System.out.print(ansi().fg(playerOneColour).a("X"));
+                    System.out.print(ansi().fg(boardColour).a("|"));
                 } else if (board[j][i] == 1) {
-                    System.out.print("O ");
+                    System.out.print(ansi().fg(playerTwoColour).a("O"));
+                    System.out.print(ansi().fg(boardColour).a("|"));
                 } else {
-                 System.out.print("  ");
+                 System.out.print("_|");
                 }
             }
             System.out.println("|");
         }
-        System.out.println("TTTTTTTTTTTTTTTTT");
+        System.out.println("TTTTTTTTTTTTTTTTT" + ansi().fg(defaultColour));
+        AnsiConsole.systemUninstall();
     }
     /**
      * Get which players turn it is. Returns 0 for Player 1, 1 for Player 2 or
@@ -110,9 +127,15 @@ public class ConnectFour {
             System.out.println("Not a valid move.");
             return false;
         }
+        AnsiConsole.systemInstall();
         for (int i = 0; i < height; i++) {
             if (board[play - 1][i] == -1) {
                 board[play - 1][i] = player;
+                System.out.println(ansi().fg((turn == 0)?playerOneColour:playerTwoColour) +
+                        "\n\nPlayer " + (turn + 1) + ansi().fg(defaultColour) + 
+                        " placed their token in " + 
+                        ansi().fg(numberColour) + "column " + play +
+                        ansi().fg(defaultColour));
                 turn = (turn + 1) % 2;
                 displayBoard();
                 int winner = checkWinner();
@@ -121,15 +144,18 @@ public class ConnectFour {
                     gameOver = true;
                     turn = -1;
                 } else if (winner != -1) {
-                    System.out.println("GAME OVER!\nWinner is Player " + 
-                            (winner + 1));
+                    System.out.println("GAME OVER!\nWinner is " + 
+                            ansi().fg((winner == 0)?playerOneColour:playerTwoColour) +
+                            "Player " + (winner + 1) + ansi().fg(defaultColour));
                     gameOver = true;
                     turn = -1;
                 }
+                AnsiConsole.systemUninstall();
                 return true;
             }
         }
         System.out.println("That column is full.");
+        AnsiConsole.systemUninstall();
         return false;
     }
     /**
