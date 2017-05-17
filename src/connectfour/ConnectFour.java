@@ -7,9 +7,10 @@ import org.fusesource.jansi.AnsiConsole;
 /**
  * This class allows the playing of a virtual game of "Connect Four"
  * This updated version adds colour to the output.
- * Note that this version uses the jansi library and requires "jansi.dll" to be
- * found in an appropriate environment path.
- * @author Stephen WhitelyP308730
+ * Note that this version uses the jansi library which should work by default 
+ * on Linux but on windows requires "jansi.dll" to be found in an appropriate 
+ * environment path. (Untested on Apple OSX)
+ * @author Stephen Whitely P308730
  * @version 2
  */
 public class ConnectFour {
@@ -30,23 +31,8 @@ public class ConnectFour {
      * This default constructor will randomly select the first player.
      */
     public ConnectFour() {
-        System.getProperties().list(System.out);
-        System.out.println("\n\n\n" + System.getProperty("os.name") + "\n\n\n");
         board = new int[width][height];
-        try {
-            // test to see if jansi library can be loaded, if not fall back to
-            // not coloured output. Note that with each method that uses the 
-            // library that the AnsiConsole is installed and uninstalled because
-            // currently the program has no exit point so it can't cleanly 
-            // unistall it on termination.
-             AnsiConsole.systemInstall();
-             AnsiConsole.systemUninstall();
-             jansiOkay = true;
-        } catch (UnsatisfiedLinkError e) {
-            System.out.println("Jansi library not loaded. No colour on output");
-            //System.out.println(e);
-            jansiOkay = false;
-        }
+        testJansi();
         startNewGame();
     }
     /**
@@ -56,6 +42,13 @@ public class ConnectFour {
      */
     public ConnectFour(int firstTurn) {
         board = new int[width][height];
+        testJansi();
+        startNewGame(firstTurn);
+    }
+    /**
+     * Private helper method to see if jansi libary can be loaded
+     */
+    private void testJansi() {
         try {
             // test to see if jansi library can be loaded, if not fall back to
             // not coloured output. Note that with each method that uses the 
@@ -70,7 +63,6 @@ public class ConnectFour {
             //System.out.println(e);
             jansiOkay = false;
         }
-        startNewGame(firstTurn);
     }
     /**
      * Start a new game with a randomly selected first player.
@@ -115,7 +107,8 @@ public class ConnectFour {
     public void displayBoard() {
         if (jansiOkay) {
             AnsiConsole.systemInstall();
-            System.out.println(ansi().fg(numberColour) + "  1 2 3 4 5 6 7");
+            System.out.println(ansi().bg(BLACK));
+            System.out.println(ansi().fg(numberColour) + "  1 2 3 4 5 6 7  ");
             System.out.println(ansi().fg(boardColour) + "_________________");
         } else {
             System.out.println("  1 2 3 4 5 6 7");
