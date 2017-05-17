@@ -25,7 +25,6 @@ public class ConnectFourServer {
      * @param args do nothing
      */
     public static void main(String[] args) {
-        c4 = new ConnectFour();
         // try (with resource) to create ServerSocket
         try (ServerSocket serverSocket = new ServerSocket(socket)) {
             System.out.println("Server is listening on port #"
@@ -43,6 +42,8 @@ public class ConnectFourServer {
                 outStream = new DataOutputStream(clientSocket.getOutputStream());
                 // scanner for user input from console
                 Scanner sc = new Scanner(System.in);
+                // instantiate the ConnectFour object
+                c4 = new ConnectFour();
                 // communicate with client and play game
                 sendMessage("" + c4.getTurn());
                 while (true) {
