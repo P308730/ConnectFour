@@ -6,6 +6,7 @@ import org.fusesource.jansi.AnsiConsole;
 
 /**
  * This class allows the playing of a virtual game of "Connect Four"
+ * This updated version adds colour to the output.
  * Note that this version uses the jansi library and requires "jansi.dll" to be
  * found in an appropriate environment path.
  * @author Stephen WhitelyP308730
@@ -16,6 +17,8 @@ public class ConnectFour {
     private int turn;
     private int width = 7, height = 6;
     private boolean gameOver;
+    // boolean to check if jansi.dll can be loaded
+    private static Boolean jansiOkay;
     // colours
     private static Color boardColour = YELLOW;
     private static Color numberColour = GREEN;
@@ -27,7 +30,23 @@ public class ConnectFour {
      * This default constructor will randomly select the first player.
      */
     public ConnectFour() {
+        System.getProperties().list(System.out);
+        System.out.println("\n\n\n" + System.getProperty("os.name") + "\n\n\n");
         board = new int[width][height];
+        try {
+            // test to see if jansi library can be loaded, if not fall back to
+            // not coloured output. Note that with each method that uses the 
+            // library that the AnsiConsole is installed and uninstalled because
+            // currently the program has no exit point so it can't cleanly 
+            // unistall it on termination.
+             AnsiConsole.systemInstall();
+             AnsiConsole.systemUninstall();
+             jansiOkay = true;
+        } catch (UnsatisfiedLinkError e) {
+            System.out.println("Jansi library not loaded. No colour on output");
+            //System.out.println(e);
+            jansiOkay = false;
+        }
         startNewGame();
     }
     /**
@@ -37,6 +56,20 @@ public class ConnectFour {
      */
     public ConnectFour(int firstTurn) {
         board = new int[width][height];
+        try {
+            // test to see if jansi library can be loaded, if not fall back to
+            // not coloured output. Note that with each method that uses the 
+            // library that the AnsiConsole is installed and uninstalled because
+            // currently the program has no exit point so it can't cleanly 
+            // unistall it on termination.
+             AnsiConsole.systemInstall();
+             AnsiConsole.systemUninstall();
+             jansiOkay = true;
+        } catch (UnsatisfiedLinkError e) {
+            System.out.println("Jansi library not loaded. No colour on output");
+            //System.out.println(e);
+            jansiOkay = false;
+        }
         startNewGame(firstTurn);
     }
     /**
@@ -80,26 +113,43 @@ public class ConnectFour {
      * Display the board by printing it out to the console.
      */
     public void displayBoard() {
-        AnsiConsole.systemInstall();
-        System.out.println(ansi().fg(numberColour) + "  1 2 3 4 5 6 7");
-        System.out.println(ansi().fg(boardColour) + "_________________");
+        if (jansiOkay) {
+            AnsiConsole.systemInstall();
+            System.out.println(ansi().fg(numberColour) + "  1 2 3 4 5 6 7");
+            System.out.println(ansi().fg(boardColour) + "_________________");
+        } else {
+            System.out.println("  1 2 3 4 5 6 7");
+            System.out.println("_________________");
+        }
         for (int i = height-1; i >= 0; i--) {
             System.out.print("||");
             for (int j = 0; j < width; j++) {
                 if (board[j][i] == 0) {
-                    System.out.print(ansi().fg(playerOneColour).a("X"));
-                    System.out.print(ansi().fg(boardColour).a("|"));
+                    if (jansiOkay) {
+                        System.out.print(ansi().fg(playerOneColour).a("X"));
+                        System.out.print(ansi().fg(boardColour).a("|"));
+                    } else {
+                        System.out.print("X|");
+                    }
                 } else if (board[j][i] == 1) {
-                    System.out.print(ansi().fg(playerTwoColour).a("O"));
-                    System.out.print(ansi().fg(boardColour).a("|"));
+                    if (jansiOkay) {
+                        System.out.print(ansi().fg(playerTwoColour).a("O"));
+                        System.out.print(ansi().fg(boardColour).a("|"));
+                    } else {
+                        System.out.print("O|");
+                    }
                 } else {
                  System.out.print("_|");
                 }
             }
             System.out.println("|");
         }
-        System.out.println("TTTTTTTTTTTTTTTTT" + ansi().fg(defaultColour));
-        AnsiConsole.systemUninstall();
+        if (jansiOkay) {
+            System.out.println("TTTTTTTTTTTTTTTTT" + ansi().fg(defaultColour));
+            AnsiConsole.systemUninstall();
+        } else {
+            System.out.println("TTTTTTTTTTTTTTTTT");
+        }
     }
     /**
      * Get which players turn it is. Returns 0 for Player 1, 1 for Player 2 or
@@ -127,15 +177,20 @@ public class ConnectFour {
             System.out.println("Not a valid move.");
             return false;
         }
-        AnsiConsole.systemInstall();
+        if (jansiOkay) AnsiConsole.systemInstall();
         for (int i = 0; i < height; i++) {
             if (board[play - 1][i] == -1) {
                 board[play - 1][i] = player;
-                System.out.println(ansi().fg((turn == 0)?playerOneColour:playerTwoColour) +
-                        "\n\nPlayer " + (turn + 1) + ansi().fg(defaultColour) + 
-                        " placed their token in " + 
-                        ansi().fg(numberColour) + "column " + play +
-                        ansi().fg(defaultColour));
+                if (jansiOkay) {
+                    System.out.println(ansi().fg((turn == 0)?playerOneColour:playerTwoColour) +
+                            "\n\nPlayer " + (turn + 1) + ansi().fg(defaultColour) + 
+                            " placed their token in " + 
+                            ansi().fg(numberColour) + "column " + play +
+                            ansi().fg(defaultColour));
+                } else {
+                    System.out.println("\n\nPlayer " + (turn + 1) + 
+                            " placed their token in column " + play);
+                }
                 turn = (turn + 1) % 2;
                 displayBoard();
                 int winner = checkWinner();
@@ -144,18 +199,23 @@ public class ConnectFour {
                     gameOver = true;
                     turn = -1;
                 } else if (winner != -1) {
-                    System.out.println("GAME OVER!\nWinner is " + 
-                            ansi().fg((winner == 0)?playerOneColour:playerTwoColour) +
-                            "Player " + (winner + 1) + ansi().fg(defaultColour));
+                    if (jansiOkay) {
+                        System.out.println("GAME OVER!\nWinner is " + 
+                                ansi().fg((winner == 0)?playerOneColour:playerTwoColour) +
+                                "Player " + (winner + 1) + ansi().fg(defaultColour));
+                    } else {
+                        System.out.println("GAME OVER!\nWinner is Player " 
+                                + (winner + 1));
+                    }
                     gameOver = true;
                     turn = -1;
                 }
-                AnsiConsole.systemUninstall();
+                if (jansiOkay) AnsiConsole.systemUninstall();
                 return true;
             }
         }
         System.out.println("That column is full.");
-        AnsiConsole.systemUninstall();
+        if (jansiOkay) AnsiConsole.systemUninstall();
         return false;
     }
     /**
